@@ -1,0 +1,92 @@
+<?php
+
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\BackendController;
+use App\Http\Controllers\Backend\DashboardController;
+use App\Http\Controllers\Backend\UserController;
+use App\Http\Controllers\FrontendController;
+use App\Http\Controllers\GuruController;
+use App\Http\Controllers\Guru\TugasController;
+use App\Http\Controllers\SiswaKelasController;
+use App\Http\Controllers\Siswa\TugasController as SiswaTugasController;
+use App\Http\Middleware\Admin;
+use App\Http\Middleware\Guru;
+use App\Http\Middleware\Siswa;
+
+// Route::get('/', function () {
+//     return view('welcome');
+// });
+
+Route::get('/', [FrontendController::class, 'index']);
+Route::get('/join', function () {
+    return view('join'); // resources/views/about.blade.php
+})->name('join');
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+use Illuminate\Support\Facades\Auth;
+
+Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+    ->middleware(['guest'])
+    ->name('login');
+
+//Route AKSES BLOKIR
+// Route::middleware('is_admin')->group(function () {
+//     // Route::resource('pengguna', PenggunasController::class);
+// });
+
+Route::group(['prefix' => 'admin', 'as' => 'backend.', 'middleware' => ['auth', Admin::class]], function () {
+    Route::get('/', [BackendController::class, 'index'])->name('dashboard');
+    // crud
+    Route::resource('/users', UserController::class);
+    Route::resource('/dashboard', DashboardController::class);
+});
+
+Route::group(['prefix' => 'guru', 'as' => 'guru.', 'middleware' => ['auth', Guru::class]], function () {
+    Route::get('/', [GuruController::class, 'index'])->name('dashboard');
+
+    // Kelas
+    Route::resource('kelas', \App\Http\Controllers\Guru\KelasController::class);
+    Route::resource('tugas', \App\Http\Controllers\Guru\TugasController::class);
+    // Tugas
+    Route::get('kelas/{kelas}/tugas/create', [\App\Http\Controllers\Guru\TugasController::class, 'create'])->name('tugas.create');
+    Route::post('kelas/{kelas}/tugas', [\App\Http\Controllers\Guru\TugasController::class, 'store'])->name('tugas.store');
+    Route::post('/guru/kelas/{kelas}/tugas', [TugasController::class, 'store'])->name('guru.tugas.store');
+    Route::get('/guru/tugas/{tugas}/edit', [TugasController::class, 'edit'])->name('guru.tugas.edit');
+    Route::put('/guru/tugas/{tugas}', [TugasController::class, 'update'])->name('guru.tugas.update');
+    Route::delete('/guru/tugas/{tugas}', [TugasController::class, 'destroy'])->name('guru.tugas.destroy');
+    Route::put('/tugas/pengumpulan/{id}/nilai', [TugasController::class, 'beriNilai'])->name('tugas.nilai');
+
+    Route::get('tugas/{tugas}/pengumpulan', [TugasController::class, 'lihatPengumpulan'])
+        ->name('tugas.pengumpulan');
+
+    // permintaan join
+    Route::get('/permintaan-join', [PermintaanJoinController::class, 'lihatPermintaan'])->name('permintaanJoin');
+
+    Route::post('/permintaan-join/{id}/terima', [PermintaanJoinController::class, 'terima'])->name('terimaPermintaan');
+    Route::post('/permintaan-join/{id}/tolak', [PermintaanJoinController::class, 'tolak'])->name('tolakPermintaan');
+});
+
+// JOIN KELAS
+Route::get('/kelas/join', [\App\Http\Controllers\JoinKelasController::class, 'form'])->name('kelas.formJoin');
+Route::post('/kelas/join', [\App\Http\Controllers\JoinKelasController::class, 'submit'])->name('kelas.submitJoin');
+
+use Illuminate\Support\Facades\Route;
+
+Route::middleware([
+    'auth',
+    Siswa::class, // ✅ pakai `::class` karena Laravel 11/12
+])->prefix('siswa')->name('siswa.')->group(function () {
+    Route::get('/', [SiswaKelasController::class, 'index'])->name('index');
+
+    Route::get('/kelas/join', [SiswaKelasController::class, 'showFormJoin'])->name('kelas.join');
+    Route::post('/kelas/join', [SiswaKelasController::class, 'prosesJoin'])->name('kelas.join.proses');
+    Route::get('/kelas/{id}', [SiswaKelasController::class, 'show'])->name('kelas.show');
+
+    // ✅ Route untuk lihat dan kumpulkan tugas
+    Route::get('/tugas/{id}', [SiswaTugasController::class, 'show'])->name('tugas.show');
+    Route::post('/tugas/{id}/kumpulkan', [SiswaTugasController::class, 'kumpulkan'])->name('tugas.kumpulkan');
+    Route::post('/tugas/{id}/kumpul', [\App\Http\Controllers\Siswa\TugasController::class, 'kumpulkan'])->name('tugas.kumpul');
+
+});
