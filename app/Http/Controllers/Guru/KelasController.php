@@ -42,7 +42,7 @@ class KelasController extends Controller
     }
     public function edit($id)
     {
-        $kelas = Kelas::findOrFail($id);
+        $kelas = Kelas::findOrFail($id); //objek
 
         // Cek hak akses guru
         if ($kelas->guru_id !== Auth::id()) {

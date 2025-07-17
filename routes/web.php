@@ -6,12 +6,13 @@ use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\UserController;
 use App\Http\Controllers\FrontendController;
 use App\Http\Controllers\GuruController;
+use App\Http\Controllers\Guru\MataPelajaranController;
 use App\Http\Controllers\Guru\TugasController;
+use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\SiswaKelasController;
 use App\Http\Controllers\Siswa\TugasController as SiswaTugasController;
 use App\Http\Middleware\Admin;
 use App\Http\Middleware\Guru;
-use App\Http\Middleware\Siswa;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -25,7 +26,7 @@ Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-use Illuminate\Support\Facades\Auth;
+use App\Http\Middleware\Siswa;
 
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])
     ->middleware(['guest'])
@@ -49,6 +50,7 @@ Route::group(['prefix' => 'guru', 'as' => 'guru.', 'middleware' => ['auth', Guru
     // Kelas
     Route::resource('kelas', \App\Http\Controllers\Guru\KelasController::class);
     Route::resource('tugas', \App\Http\Controllers\Guru\TugasController::class);
+    Route::resource('mapel', MataPelajaranController::class);
     // Tugas
     Route::get('kelas/{kelas}/tugas/create', [\App\Http\Controllers\Guru\TugasController::class, 'create'])->name('tugas.create');
     Route::post('kelas/{kelas}/tugas', [\App\Http\Controllers\Guru\TugasController::class, 'store'])->name('tugas.store');
@@ -72,21 +74,36 @@ Route::group(['prefix' => 'guru', 'as' => 'guru.', 'middleware' => ['auth', Guru
 Route::get('/kelas/join', [\App\Http\Controllers\JoinKelasController::class, 'form'])->name('kelas.formJoin');
 Route::post('/kelas/join', [\App\Http\Controllers\JoinKelasController::class, 'submit'])->name('kelas.submitJoin');
 
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 Route::middleware([
     'auth',
-    Siswa::class, // ✅ pakai `::class` karena Laravel 11/12
+    Siswa::class, // ✅ pakai ::class karena Laravel 11/12
 ])->prefix('siswa')->name('siswa.')->group(function () {
+    // Halaman dashboard siswa
     Route::get('/', [SiswaKelasController::class, 'index'])->name('index');
 
+    // Join kelas
     Route::get('/kelas/join', [SiswaKelasController::class, 'showFormJoin'])->name('kelas.join');
     Route::post('/kelas/join', [SiswaKelasController::class, 'prosesJoin'])->name('kelas.join.proses');
     Route::get('/kelas/{id}', [SiswaKelasController::class, 'show'])->name('kelas.show');
+    Route::delete('/kelas/{kelas}/keluar', [SiswaKelasController::class, 'keluar'])->name('kelas.keluar');
 
-    // ✅ Route untuk lihat dan kumpulkan tugas
+    // ✅ Tugas: lihat detail & kumpulkan
     Route::get('/tugas/{id}', [SiswaTugasController::class, 'show'])->name('tugas.show');
     Route::post('/tugas/{id}/kumpulkan', [SiswaTugasController::class, 'kumpulkan'])->name('tugas.kumpulkan');
-    Route::post('/tugas/{id}/kumpul', [\App\Http\Controllers\Siswa\TugasController::class, 'kumpulkan'])->name('tugas.kumpul');
 
+    // ✅ Tugas: edit & batalkan pengumpulan
+    Route::get('/tugas/edit/{id}', [SiswaTugasController::class, 'editPengumpulan'])->name('tugas.edit');
+    Route::post('/tugas/update/{id}', [SiswaTugasController::class, 'updatePengumpulan'])->name('tugas.update');
+    Route::delete('/tugas/batalkan/{id}', [SiswaTugasController::class, 'destroyPengumpulan'])->name('tugas.batalkan');
+
+});
+
+use Illuminate\Support\Facades\Route;
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profil', [ProfilController::class, 'show'])->name('profil');
+    Route::get('/profil/edit', [ProfilController::class, 'edit'])->name('profil.edit');
+    Route::post('/profil/update', [ProfilController::class, 'update'])->name('profil.update');
 });

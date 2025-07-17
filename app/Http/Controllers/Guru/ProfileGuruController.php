@@ -5,9 +5,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class ProfileGuruController extends Controller
+class ProfileGuruController extends Controller //class
 {
-    public function edit()
+    public function edit() //mathod
     {
         $guru = Auth::user()->guru;
         return view('guru.profil.edit', compact('guru'));

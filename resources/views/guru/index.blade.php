@@ -14,7 +14,7 @@
                 <div class="card text-white mb-4" style="background-color: #16a34a;"> <!-- Hijau utama -->
                     <div class="card-body">Total Kelas</div>
                     <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-white stretched-link" href="#">Lihat Detail</a>
+                        <a class="small text-white stretched-link" href="{{route('guru.tugas.index')}}">Lihat Detail</a>
                         <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                     </div>
                 </div>
@@ -24,7 +24,7 @@
                 <div class="card text-white mb-4" style="background-color: #22c55e;"> <!-- Hijau cerah -->
                     <div class="card-body">Total Tugas</div>
                     <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-white stretched-link" href="#">Lihat Detail</a>
+                        <a class="small text-white stretched-link" href="{{route('guru.tugas.index')}}">Lihat Detail</a>
                         <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                     </div>
                 </div>
